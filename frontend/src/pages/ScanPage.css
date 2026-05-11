@@ -1,0 +1,220 @@
+.scan-page {
+  padding: 40px 0;
+  min-height: calc(100vh - 140px);
+}
+
+.scan-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.scan-header h1 {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 12px;
+}
+
+.scan-header p {
+  color: #6b7280;
+  font-size: 16px;
+}
+
+.scan-content {
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.upload-zone {
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  padding: 60px 40px;
+  text-align: center;
+  transition: all 0.3s ease;
+  background: #f9fafb;
+  cursor: pointer;
+}
+
+.upload-zone.drag-active {
+  border-color: #4f46e5;
+  background: #eef2ff;
+}
+
+.upload-zone.has-file {
+  background: white;
+  border-color: #10b981;
+}
+
+.upload-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.upload-icon {
+  font-size: 64px;
+  opacity: 0.6;
+}
+
+.upload-prompt h3 {
+  font-size: 20px;
+  color: #1f2937;
+  margin: 0;
+}
+
+.upload-prompt p {
+  color: #6b7280;
+  margin: 0;
+}
+
+.upload-hint {
+  font-size: 14px;
+  color: #9ca3af;
+  margin-top: 8px;
+}
+
+.file-preview {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px;
+  background: white;
+  border-radius: 8px;
+  position: relative;
+}
+
+.file-icon {
+  font-size: 48px;
+}
+
+.file-info {
+  flex: 1;
+  text-align: left;
+}
+
+.file-info h3 {
+  font-size: 18px;
+  color: #1f2937;
+  margin: 0 0 4px 0;
+}
+
+.file-info p {
+  color: #6b7280;
+  margin: 0;
+  font-size: 14px;
+}
+
+.remove-file {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: #fee2e2;
+  color: #991b1b;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.remove-file:hover {
+  background: #fca5a5;
+}
+
+.progress-container {
+  margin-top: 24px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4f46e5, #7c3aed);
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  text-align: center;
+  margin-top: 8px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.scan-actions {
+  margin-top: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.info-card {
+  margin-top: 40px;
+}
+
+.scan-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.scan-step {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.step-number {
+  width: 40px;
+  height: 40px;
+  background: #4f46e5;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.step-content h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 4px 0;
+}
+
+.step-content p {
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+  .upload-zone {
+    padding: 40px 20px;
+  }
+  
+  .scan-steps {
+    gap: 20px;
+  }
+  
+  .step-number {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+}
