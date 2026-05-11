@@ -1,0 +1,138 @@
+version: '3.8'
+
+# ── Xpos3 Development Stack ──────────────────────────────────────────────────
+#
+# Services:
+#   postgres      — primary database
+#   redis         — Celery broker & result backend
+#   bandit-build  — builds xpos3-bandit:latest image (runs once, then exits)
+#   backend       — Flask API (spawns bandit containers via Docker socket)
+#   celery        — background worker for async scan tasks
+#   frontend      — React SPA (Vite dev server)
+#
+# Quick start:
+#   1. Copy backend/.env.example → backend/.env and fill in secrets
+#   2. docker-compose up --build
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── PostgreSQL ──────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: xpos3_db
+      POSTGRES_USER: xpos3_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secure_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U xpos3_user -d xpos3_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis ───────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Build the Bandit scanner image ──────────────────────────────────────────
+  # This service builds xpos3-bandit:latest and exits.
+  # The backend/celery services use this image to spawn per-scan containers.
+  bandit-build:
+    build:
+      context: ./backend/docker
+      dockerfile: Dockerfile.bandit
+    image: xpos3-bandit:latest
+    entrypoint: ["echo", "xpos3-bandit image ready"]
+
+  # ── Flask Backend ───────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: docker/Dockerfile.backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      FLASK_ENV: development
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-CHANGE-IN-PRODUCTION}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-jwt-secret-key-CHANGE-IN-PRODUCTION}
+      SQLALCHEMY_DATABASE_URI: postgresql://xpos3_user:${POSTGRES_PASSWORD:-secure_password}@postgres:5432/xpos3_db
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      OLLAMA_URL: ${OLLAMA_URL:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-gemma2:2b}
+      UPLOAD_FOLDER: /app/uploads
+      # Named volume used when spawning Bandit sub-containers from inside Docker.
+      # Convention: {compose_project_name}_{volume_name}  (project = folder name)
+      UPLOADS_VOLUME_NAME: xpos3_uploads_data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      bandit-build:
+        condition: service_completed_successfully
+    volumes:
+      - ./backend:/app
+      - uploads_data:/app/uploads
+      # Mount Docker socket so the backend can spawn Bandit containers
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: python run.py
+
+  # ── Celery Worker ───────────────────────────────────────────────────────────
+  celery:
+    build:
+      context: ./backend
+      dockerfile: docker/Dockerfile.backend
+    restart: unless-stopped
+    command: celery -A celery_worker.celery_app worker --loglevel=info --concurrency=2
+    environment:
+      FLASK_ENV: development
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-CHANGE-IN-PRODUCTION}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-jwt-secret-key-CHANGE-IN-PRODUCTION}
+      SQLALCHEMY_DATABASE_URI: postgresql://xpos3_user:${POSTGRES_PASSWORD:-secure_password}@postgres:5432/xpos3_db
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      OLLAMA_URL: ${OLLAMA_URL:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-gemma2:2b}
+      UPLOAD_FOLDER: /app/uploads
+      UPLOADS_VOLUME_NAME: xpos3_uploads_data
+    depends_on:
+      - backend
+    volumes:
+      - ./backend:/app
+      - uploads_data:/app/uploads
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  # ── React Frontend ──────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      VITE_API_URL: http://localhost:5000/api
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+volumes:
+  postgres_data:
+  uploads_data:

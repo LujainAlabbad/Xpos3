@@ -1,0 +1,22 @@
+# ─── Bandit Scanner Image ───────────────────────────────────────────────────
+# This image is launched as a fresh, isolated container for every scan.
+# It has NO network access and runs as a non-root user.
+FROM python:3.11-slim
+
+# Install bandit and its dependencies explicitly
+RUN pip install --no-cache-dir pbr bandit==1.7.5
+
+# Non-root user for extra security
+RUN useradd -m -u 1000 scanner
+
+# Scanner script
+WORKDIR /scanner
+COPY bandit_scanner.py /scanner/bandit_scanner.py
+RUN chmod +x /scanner/bandit_scanner.py
+
+# Mount point for user code (read-only at runtime)
+RUN mkdir -p /code && chown scanner:scanner /code
+
+USER scanner
+
+ENTRYPOINT ["python", "/scanner/bandit_scanner.py"]
