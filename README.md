@@ -31,16 +31,6 @@ git clone [https://github.com/LujainAlabbad/Xpos3.git](https://github.com/Lujain
 # Navigate to the project folder
 cd Xpos3
 ```
-### 🎨 Step 2.5: Install Frontend Dependencies
-
-Since the `node_modules` folder is excluded from the repository, you must install the required packages locally before running the frontend.
-
-Navigate to the frontend directory and run:
-
-```bash
-cd frontend
-npm install
-```
 ### ⚙️ Step 3: Configure Environment Variables
 
 To ensure secure communication and database access, you must set up your environment variables. 
