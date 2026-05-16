@@ -27,6 +27,6 @@ class Scan(db.Model):
             'filename': self.filename,
             'status': self.status,
             'severity_summary': self.severity_summary,
-            'created_at': self.created_at.isoformat(),
-            'completed_at': self.completed_at.isoformat() if self.completed_at else None
+            'created_at': self.created_at.isoformat() + 'Z',
+            'completed_at': self.completed_at.isoformat() + 'Z' if self.completed_at else None
         }
